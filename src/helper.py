@@ -1,7 +1,21 @@
 import requests
 from datetime import datetime
-
 from constants import WEATHER_API_KEY,BASE_URL,DIRECT_GEOCODE_URL,DIRECT_GEOCODE_WITH_ZIPCODE_URL,REVERSE_GEOCODE_URL
+
+def get_current_location():
+    try:
+        response = requests.get("https://ipinfo.io/json")
+        if response.status_code == 200:
+            data = response.json()
+            loc = data.get("loc")  # format: "lat,lon"
+            if loc:
+                lat, lon = map(float, loc.split(","))
+                return lat, lon
+    except Exception as e:
+        print(f"Could not get current location: {e}")
+    return None, None
+
+
 
 def direct_geocode(city_name,limit=1):
     params = {
