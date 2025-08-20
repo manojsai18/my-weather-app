@@ -1,11 +1,13 @@
 import requests
+from datetime import datetime
+
 from constants import WEATHER_API_KEY,BASE_URL,DIRECT_GEOCODE_URL,DIRECT_GEOCODE_WITH_ZIPCODE_URL,REVERSE_GEOCODE_URL
 
-def direct_geocode(city_name,limit=1);
+def direct_geocode(city_name,limit=1):
     params = {
-            "l": city_name,
-            "limits": limit,
-            "WEATHER_API_KEY": WEATHER_API_KEY
+            "q": city_name,
+            "limit": limit,
+            "appid": WEATHER_API_KEY
 
 
     }
@@ -16,25 +18,26 @@ def direct_geocode(city_name,limit=1);
     
 
     response =requests.get(DIRECT_GEOCODE_URL,params=params)
-    if response.status_code == 200 and response.json():
-        data =response.json()[0]
-        # take first match
-return {"lat":data["lat"],"lon":data["lon"]}
-return None
+    if response.status_code == 200:
+        json_response = response.json()
+        if json_response:  # Check if list is not empty
+            data = json_response[0]
+    return {"lat":data["lat"],"lon":data["lon"]}
+    return None
 
-def reverse_geocode(lat,long,limit=1):
+def reverse_geocode(lat,lon,limit=1):
 #Get location details (city, state, country) from lat, lon using reverse geocoding API.
      #Returns a dict with name and other details if found, else None.
 
-params = {
+    params = {
       "lat":lat,
       "lon":lon,
       "limit": limit,
-      "WEATHER_API_KEY":WEATHER_API_KEY
+      "appid":WEATHER_API_KEY
 
-}
+    }
 
-response = requests.get(REVERSE_GEOCODE_URL,params=params)
+    response = requests.get(REVERSE_GEOCODE_URL,params=params)
     if response.status_code == 200 and response.json():
         data = response.json()[0]
         return {
@@ -51,7 +54,7 @@ def get_weather_by_coords(lat, lon):
     params = {
         "lat": lat,
         "lon": lon,
-        "WEATHER_API_KEY": WEATHER_API_KEY,
+        "appid": WEATHER_API_KEY,
         "units": "metric"
     }
     response = requests.get(BASE_URL, params=params)
@@ -65,7 +68,7 @@ def get_weather_by_city(city):
     """
     params = {
         "q": city,
-        "WEATHER_API_KEY": WEATHER_API_KEY,
+        "appid": WEATHER_API_KEY,
         "units": "metric"
     }
     response = requests.get(BASE_URL, params=params)
@@ -73,9 +76,28 @@ def get_weather_by_city(city):
         return response.json()
     return None
 
-def format_weather(data):
+def get_uv_index(lat, lon):
     """
-    Format the JSON weather data into a readable string.
+    Fetch UV index for given coordinates.
+    """
+    uv_url = "http://api.openweathermap.org/data/2.5/uvi"
+    params = {"lat": lat, "lon": lon, "appid": WEATHER_API_KEY}
+    response = requests.get(uv_url, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        return data.get("value")  # UV index value
+    return None
+
+
+def format_unix_time(unix_timestamp):
+    """
+    Convert Unix timestamp to readable local time string.
+    """
+    return datetime.fromtimestamp(unix_timestamp).strftime('%H:%M:%S')
+
+def format_weather(data, uv_index=None):
+    """
+    Format weather data with UV index, sunrise, sunset times included.
     """
     if not data:
         return "Weather data not available."
@@ -106,3 +128,8 @@ def format_weather(data):
     
     
     )
+
+
+
+
+
