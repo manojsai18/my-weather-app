@@ -5,21 +5,19 @@ from constants import WEATHER_API_KEY,BASE_URL,DIRECT_GEOCODE_URL,DIRECT_GEOCODE
 def get_current_location():
     try:
         response = requests.get("https://ipinfo.io/json")
-        if response.status_code == 200:
-            data = response.json()
-            loc = data.get("loc")  # format: "lat,lon"
-            if loc:
-                lat, lon = map(float, loc.split(","))
-                return lat, lon
-    except Exception as e:
-        print(f"Could not get current location: {e}")
-    return None, None
+        data = response.json()
+        city= data.get("city")
+        print(data["city"])
+        return city
+    except Exception:
+        return None
+    
 
 
 
-def direct_geocode(city_name,limit=1):
+def direct_geocode(city,limit=1):
     params = {
-            "q": city_name,
+            "q": city,
             "limit": limit,
             "appid": WEATHER_API_KEY
 
@@ -36,7 +34,8 @@ def direct_geocode(city_name,limit=1):
         json_response = response.json()
         if json_response:  # Check if list is not empty
             data = json_response[0]
-    return {"lat":data["lat"],"lon":data["lon"]}
+        return {"lat":data["lat"],"lon":data["lon"]}
+    
     return None
 
 def reverse_geocode(lat,lon,limit=1):
@@ -61,7 +60,7 @@ def reverse_geocode(lat,lon,limit=1):
         }
     return None
 
-def get_weather_by_coords(lat, lon):
+def get_weather(lat, lon):
     """
     Fetch weather data using latitude and longitude.
     """
@@ -76,26 +75,13 @@ def get_weather_by_coords(lat, lon):
         return response.json()
     return None
 
-def get_weather_by_city(city):
-    """
-    Fetch weather data using city name.
-    """
-    params = {
-        "q": city,
-        "appid": WEATHER_API_KEY,
-        "units": "metric"
-    }
-    response = requests.get(BASE_URL, params=params)
-    if response.status_code == 200:
-        return response.json()
-    return None
 
-def get_uv_index(lat, lon):
+def get_uv_index(lat, lon,):
     """
     Fetch UV index for given coordinates.
     """
     uv_url = "http://api.openweathermap.org/data/2.5/uvi"
-    params = {"lat": lat, "lon": lon, "appid": WEATHER_API_KEY}
+    params = {"lat": lat, "lon": lon,"appid": WEATHER_API_KEY}
     response = requests.get(uv_url, params=params)
     if response.status_code == 200:
         data = response.json()
